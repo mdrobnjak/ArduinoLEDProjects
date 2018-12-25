@@ -11,10 +11,7 @@
 
 // Define the array of leds
 CRGB leds[NUM_LEDS];
-int iloops = 0, jloops = 0;
-int delayMs = 100;
-int j = 0;
-int iSpeed = 1, jSpeed = 1;
+int delayMs = 1000, loops = 0;
 
 void setup() {
   Serial.begin(57600);
@@ -34,70 +31,47 @@ void checkForInput()
   if (Serial.available() > 0)
   {
     char z = Serial.read();
-    if(z == 'b')
-    {
-      iSpeed = 3;
-      iloops = 1;
-    }
-    else
-    {
-      jSpeed = 3;
-      jloops = 1;
-    }
+    delayMs = 5;
+    loops = 5;
   }
-  if (iloops > 0)
+  else if(loops > 0)
   {
-    iloops--;
+    loops--;
   }
   else
   {
-    //delayMs++;
-    iSpeed = 1;
-  }
-  if(jloops > 0)
-  {
-    jloops--;
-  }
-  else
-  {
-    jSpeed = 1;
+    delayMs +=25;
   }
 }
 
 void loop() {
   static uint8_t hue = 160;
-  Serial.print("x");
   // First slide the led in one direction
-  for (int i = 0 ; ; ) {
+  for (int i = 0; i < NUM_LEDS; i++ ) {
     checkForInput();
     // Set the i'th led to red
     leds[i] = CHSV(hue, 255, 255);
-    leds[j] = CHSV(hue-60, 255, 255);
     // Show the leds
     FastLED.show();
     // now that we've shown the leds, reset the i'th led to black
     // leds[i] = CRGB::Black;
     fadeall();
-
-    i = i >= NUM_LEDS - 1 ? 0 : i + iSpeed;
-    j = j >= NUM_LEDS - 1 ? 0 : j + jSpeed;
-
     // Wait a little bit before we loop around and do it again
     delay(delayMs);
   }
   Serial.print("x");
 
-  // Now go in the other direction.
-  //  for (int i = (NUM_LEDS) - 1; i >= 0; i--) {
-  //    checkForInput();
-  //    // Set the i'th led to red
-  //    leds[i] = CHSV(hue, 255, 255);
-  //    // Show the leds
-  //    FastLED.show();
-  //    // now that we've shown the leds, reset the i'th led to black
-  //    // leds[i] = CRGB::Black;
-  //    fadeall();
-  //    // Wait a little bit before we loop around and do it again
-  //    delay(delayMs);
-  //  }
+   //Now go in the other direction.
+    for (int i = (NUM_LEDS) - 1; i >= 0; i--) {
+      checkForInput();
+      // Set the i'th led to red
+      leds[i] = CHSV(hue, 255, 255);
+      // Show the leds
+      FastLED.show();
+      // now that we've shown the leds, reset the i'th led to black
+      // leds[i] = CRGB::Black;
+      fadeall();
+      // Wait a little bit before we loop around and do it again
+      delay(delayMs);
+    }
 }
