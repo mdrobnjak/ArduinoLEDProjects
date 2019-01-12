@@ -12,18 +12,18 @@
 // Define the array of leds
 CRGB leds[NUM_LEDS];
 int delayMs = 1000, loops = 0;
-static uint8_t hue, hueIncrement = 20;
-int iL, iLSkip = 2;
+static uint8_t hue = 160, hueIncrement = 20;
+int iL, iLPrev, iLSkip = 2;
 
 void setup() {
   Serial.begin(57600);
   Serial.println("resetting");
   LEDS.addLeds<WS2812, DATA_PIN, RGB>(leds, NUM_LEDS);
-  LEDS.setBrightness(84);
+  LEDS.setBrightness(30);
 }
 
-void fadeall() {
-  for (int i = 0; i < NUM_LEDS; i++) {
+void fadeall(int iL, int numBehindiL, int inc) {
+  for (int i = iL; i > iL - numBehindiL && i >= 0 && i <= NUM_LEDS; i+= inc) {
     leds[i].fadeToBlackBy(255);
   }
 }
@@ -34,12 +34,14 @@ void checkForInput(int inc)
   if(loops > 0)
   {
     loops--;
-    while(Serial.available() > 0) z = Serial.read();
   }
   else if (Serial.available() > 0)
   {
-    iL += inc;
-    z = Serial.read();
+    if(iL + inc < NUM_LEDS && iL + inc > 0)
+    {
+      iL += inc;
+    }
+    while(Serial.available() > 0) z = Serial.read();
     hue += hueIncrement;
     delayMs = 5;
     loops = 1;
@@ -51,33 +53,30 @@ void checkForInput(int inc)
 }
 
 void loop() {
-  hue = 160;
-  // First slide the led in one direction
-  for (iL = 0; iL < NUM_LEDS && iL >= 0; iL++ ) {
+  iLPrev = 9999;
+  for (iL = 0; iL < NUM_LEDS; iL++ ) {
     checkForInput(iLSkip);
-    // Set the i'th led to red
-    leds[iL] = CHSV(hue, 255, 255);
-    // Show the leds
+    
+    leds[iL] = CHSV(hue, 255, 255);    
+    
+    leds[iLPrev].fadeToBlackBy(255);
+    iLPrev = iL;
+    
     FastLED.show();
-    // now that we've shown the leds, reset the i'th led to black
-    // leds[i] = CRGB::Black;
-    fadeall();
-    // Wait a little bit before we loop around and do it again
+    
     delay(delayMs);
   }
-  Serial.print("x");
-
-   //Now go in the other direction.
-    for (iL = (NUM_LEDS) - 1; iL >= 0 &&  iL < NUM_LEDS ; iL--) {
-      checkForInput(-iLSkip);
-      // Set the i'th led to red
-      leds[iL] = CHSV(hue, 255, 255);
-      // Show the leds
-      FastLED.show();
-      // now that we've shown the leds, reset the i'th led to black
-      // leds[i] = CRGB::Black;
-      fadeall();
-      // Wait a little bit before we loop around and do it again
-      delay(delayMs);
-    }
+  
+  for (iL = (NUM_LEDS) - 1; iL >= 0; iL--) {
+    checkForInput(-iLSkip);
+    
+    leds[iL] = CHSV(hue, 255, 255);
+    
+    leds[iLPrev].fadeToBlackBy(255);
+    iLPrev = iL;
+    
+    FastLED.show();
+    
+    delay(delayMs);
+  }
 }
