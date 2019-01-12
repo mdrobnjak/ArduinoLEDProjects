@@ -53,7 +53,7 @@ void checkForInput(int inc)
 void loop() {
   hue = 160;
   // First slide the led in one direction
-  for (iL = 0; iL < NUM_LEDS; iL++ ) {
+  for (iL = 0; iL < NUM_LEDS && iL >= 0; iL++ ) {
     checkForInput(iLSkip);
     // Set the i'th led to red
     leds[iL] = CHSV(hue, 255, 255);
@@ -68,7 +68,7 @@ void loop() {
   Serial.print("x");
 
    //Now go in the other direction.
-    for (iL = (NUM_LEDS) - 1; iL >= 0; iL--) {
+    for (iL = (NUM_LEDS) - 1; iL >= 0 &&  iL < NUM_LEDS ; iL--) {
       checkForInput(-iLSkip);
       // Set the i'th led to red
       leds[iL] = CHSV(hue, 255, 255);
