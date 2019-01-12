@@ -12,6 +12,8 @@
 // Define the array of leds
 CRGB leds[NUM_LEDS];
 int delayMs = 1000, loops = 0;
+static uint8_t hue, hueIncrement = 20;
+int iL, iLSkip = 2;
 
 void setup() {
   Serial.begin(57600);
@@ -26,17 +28,21 @@ void fadeall() {
   }
 }
 
-void checkForInput()
+void checkForInput(int inc)
 {
-  if (Serial.available() > 0)
-  {
-    char z = Serial.read();
-    delayMs = 5;
-    loops = 5;
-  }
-  else if(loops > 0)
+  char z;
+  if(loops > 0)
   {
     loops--;
+    while(Serial.available() > 0) z = Serial.read();
+  }
+  else if (Serial.available() > 0)
+  {
+    iL += inc;
+    z = Serial.read();
+    hue += hueIncrement;
+    delayMs = 5;
+    loops = 1;
   }
   else
   {
@@ -45,12 +51,12 @@ void checkForInput()
 }
 
 void loop() {
-  static uint8_t hue = 160;
+  hue = 160;
   // First slide the led in one direction
-  for (int i = 0; i < NUM_LEDS; i++ ) {
-    checkForInput();
+  for (iL = 0; iL < NUM_LEDS; iL++ ) {
+    checkForInput(iLSkip);
     // Set the i'th led to red
-    leds[i] = CHSV(hue, 255, 255);
+    leds[iL] = CHSV(hue, 255, 255);
     // Show the leds
     FastLED.show();
     // now that we've shown the leds, reset the i'th led to black
@@ -62,10 +68,10 @@ void loop() {
   Serial.print("x");
 
    //Now go in the other direction.
-    for (int i = (NUM_LEDS) - 1; i >= 0; i--) {
-      checkForInput();
+    for (iL = (NUM_LEDS) - 1; iL >= 0; iL--) {
+      checkForInput(-iLSkip);
       // Set the i'th led to red
-      leds[i] = CHSV(hue, 255, 255);
+      leds[iL] = CHSV(hue, 255, 255);
       // Show the leds
       FastLED.show();
       // now that we've shown the leds, reset the i'th led to black
