@@ -45,7 +45,7 @@ void setup() {
   currentBlending = LINEARBLEND;
 }
 
-uint8_t bBrightness = 255, mBrightness = 255, fadeSpeed = 12, density = 4;
+uint8_t bBrightness = 255, mBrightness = 255, fadeSpeed = 24, density = 4;
 
 void loop()
 {
