@@ -9,74 +9,137 @@
 #define DATA_PIN 5
 #define CLOCK_PIN 13
 
-// Define the array of leds
 CRGB leds[NUM_LEDS];
-int delayMs = 1000, loops = 0;
-static uint8_t hue = 160, hueIncrement = 20;
-int iL, iLPrev, iLSkip = 2;
+
+int delayMs = 1000;
+int loops = 0;
+static uint8_t hue = 160;
+static uint8_t hueIncrement = 20;
+int iL, iLPrev = 9999, iLSkip = 1;
+int brightness = 30;
+char z;
 
 void setup() {
   Serial.begin(57600);
   Serial.println("resetting");
   LEDS.addLeds<WS2812, DATA_PIN, RGB>(leds, NUM_LEDS);
-  LEDS.setBrightness(30);
+  LEDS.setBrightness(brightness);
 }
 
-void fadeall(int iL, int numBehindiL, int inc) {
-  for (int i = iL; i > iL - numBehindiL && i >= 0 && i <= NUM_LEDS; i+= inc) {
-    leds[i].fadeToBlackBy(255);
-  }
-}
-
-void checkForInput(int inc)
+void Dim(int dimBy)
 {
-  char z;
-  if(loops > 0)
+  if (brightness > dimBy)
   {
-    loops--;
+    brightness -= dimBy;
+    LEDS.setBrightness(brightness);
   }
-  else if (Serial.available() > 0)
+}
+
+void Brighten()
+{
+  brightness = 140;
+  LEDS.setBrightness(brightness);
+}
+
+void ExecuteSkip()
+{
+  if (iL + iLSkip < NUM_LEDS && iL + iLSkip > 0)
   {
-    if(iL + inc < NUM_LEDS && iL + inc > 0)
-    {
-      iL += inc;
-    }
-    while(Serial.available() > 0) z = Serial.read();
-    hue += hueIncrement;
-    delayMs = 5;
-    loops = 1;
+    iL += iLSkip;
   }
-  else
+}
+
+void ClearSerialBuffer()
+{
+  while (Serial.available() > 0) z = Serial.read();
+}
+
+void CheckForInput()
+{
+  z = '0';
+  if (Serial.available() > 0)
   {
-    delayMs +=25;
+    z = Serial.read();
   }
+}
+
+void ProcessInput()
+{
+  switch (z)
+  {
+    case '0':
+      if (loops > 0) loops--;
+      else
+      {
+        delayMs += 25;
+        Dim(10);
+      }
+      break;
+    case 'b':
+      ExecuteSkip(); //Skip ahead.
+
+      Brighten();
+
+      hue += hueIncrement;
+      delayMs = 5;
+      loops = 1;
+      break;
+    case 'm':
+      Brighten();
+      while (true) //Stop moving.
+      {
+        FastLED.show();
+        
+        Dim(3);
+
+        if (Serial.available() > 0)z = Serial.read();
+
+        if (z == 'b')
+        {
+          ProcessInput();
+          return;
+        }
+
+        if (z == 'm')Brighten();
+
+        z = '0';
+      }
+      break;
+    default:
+      break;
+  }
+  ClearSerialBuffer();
 }
 
 void loop() {
+
   iLPrev = 9999;
+
   for (iL = 0; iL < NUM_LEDS; iL++ ) {
-    checkForInput(iLSkip);
-    
-    leds[iL] = CHSV(hue, 255, 255);    
-    
-    leds[iLPrev].fadeToBlackBy(255);
-    iLPrev = iL;
-    
-    FastLED.show();
-    
-    delay(delayMs);
-  }
-  
-  for (iL = (NUM_LEDS) - 1; iL >= 0; iL--) {
-    checkForInput(-iLSkip);
-    
+    CheckForInput();
+    ProcessInput();
+
     leds[iL] = CHSV(hue, 255, 255);
-    
+
     leds[iLPrev].fadeToBlackBy(255);
     iLPrev = iL;
-    
+
     FastLED.show();
-    
-    delay(delayMs);
+
+    FastLED.delay(delayMs);
+  }
+
+  for (iL = (NUM_LEDS) - 1; iL >= 0; iL--) {
+    CheckForInput();
+    ProcessInput();
+
+    leds[iL] = CHSV(hue, 255, 255);
+
+    leds[iLPrev].fadeToBlackBy(255);
+    iLPrev = iL;
+
+    FastLED.show();
+
+    FastLED.delay(delayMs);
   }
 }
