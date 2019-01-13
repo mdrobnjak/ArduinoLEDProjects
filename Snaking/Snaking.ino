@@ -35,9 +35,9 @@ void Dim(int dimBy)
   }
 }
 
-void Brighten()
+void Brighten(int newBrightness)
 {
-  brightness = 140;
+  brightness = newBrightness;
   LEDS.setBrightness(brightness);
 }
 
@@ -78,14 +78,14 @@ void ProcessInput()
     case 'b':
       ExecuteSkip(); //Skip ahead.
 
-      Brighten();
+      Brighten(120);
 
       hue += hueIncrement;
       delayMs = 5;
       loops = 1;
       break;
     case 'm':
-      Brighten();
+      Brighten(180);
       while (true) //Stop moving.
       {
         FastLED.show();
@@ -100,7 +100,7 @@ void ProcessInput()
           return;
         }
 
-        if (z == 'm')Brighten();
+        if (z == 'm')Brighten(180);
 
         z = '0';
       }
