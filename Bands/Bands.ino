@@ -2,7 +2,6 @@
 
 #define LED_PIN     5
 #define NUM_LEDS    144
-#define BRIGHTNESS  64
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
 CRGB leds[NUM_LEDS];
@@ -36,91 +35,79 @@ extern const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM;
 
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(57600);
   delay( 3000 ); // power-up safety delay
   FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
-  FastLED.setBrightness(  BRIGHTNESS );
+  FastLED.setbrightness(  brightness );
 
   currentPalette = RainbowColors_p;
   currentBlending = LINEARBLEND;
 }
 
-uint8_t bBrightness = 255, mBrightness = 255, fadeSpeed = 24, density = 4;
+char z;
+uint8_t density = 4;
+int brightness = 20;
+
+void Dim(int dimBy)
+{
+  if (brightness > dimBy - 1)
+  {
+    brightness -= dimBy;
+    LEDS.setbrightness(brightness);
+  }
+}
+
+void ClearSerialBuffer()
+{
+  while (Serial.available() > 0) z = Serial.read();
+}
+
+void CheckForInput()
+{
+  z = '0';
+  if (Serial.available() > 0)
+  {
+    z = Serial.read();
+  }
+}
+
+void ProcessInput()
+{
+  switch (z)
+  {
+    case 'b':
+      FillLEDsFromPaletteColors(0, 71);
+      break;
+    case 'm':
+      FillLEDsFromPaletteColors(72, 143);
+      break;
+    default:
+      break;
+  }
+}
+
+static uint8_t colorIndex = 0;
 
 void loop()
 {
+  colorIndex = colorIndex + 1; /* motion speed */
 
-  //ChangePalettePeriodically();
+  CheckForInput();
 
-  static uint8_t startIndex = 0;
-  startIndex = startIndex + 1; /* motion speed */
-
-
-  //**********************************************************************
-  if (Serial.available() > 0)
-  {
-    char msg = Serial.read();
-    switch(msg)
-    {
-      case 'b':
-      bBrightness = 255;
-      break;
-      case 'm':
-      mBrightness = 255;
-      break;
-      case 's':
-      density = 4;
-      break;
-      case 't':
-      density = 3;
-      break;
-      case 'u':
-      density = 2;
-      break;
-      case 'v':
-      density = 1;
-      break;
-      default:
-      break;
-    }
-  }
-  else
-  {
-    if (bBrightness >= fadeSpeed)
-    {
-      bBrightness -= fadeSpeed;
-    }
-    else if(bBrightness > 0)
-    {
-      bBrightness--;
-    }
-    
-    if(mBrightness >= fadeSpeed)
-    {
-      mBrightness -= fadeSpeed;
-    }
-    else if(mBrightness > 0)
-    {
-      mBrightness--;
-    }
-  }
-
-  while (Serial.available() > 0) {
-    char z = Serial.read();
-  }
-  //**********************************************************************
-
-
-  FillLEDsFromPaletteColors( startIndex, bBrightness, 0, 71);
-  FillLEDsFromPaletteColors( startIndex, mBrightness, 72, 143);
+  ProcessInput();
 
   FastLED.show();
+
+  Dim(5);
+
+  ClearSerialBuffer();
+
   FastLED.delay(1000 / UPDATES_PER_SECOND);
 }
 
-void FillLEDsFromPaletteColors( uint8_t colorIndex, uint8_t brightness, int firstLEDIndex, int lastLEDIndex)
+void FillLEDsFromPaletteColors(int firstLEDIndex, int lastLEDIndex)
 {
-  for ( int i = firstLEDIndex; i <= lastLEDIndex; i+=density) {
+  for ( int i = firstLEDIndex; i <= lastLEDIndex; i += density) {
     leds[i] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
     colorIndex += 3;
   }
