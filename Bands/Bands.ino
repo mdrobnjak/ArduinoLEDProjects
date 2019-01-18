@@ -2,6 +2,7 @@
 
 #define LED_PIN     5
 #define NUM_LEDS    144
+#define BRIGHTNESS   40
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
 CRGB leds[NUM_LEDS];
@@ -33,29 +34,20 @@ TBlendType    currentBlending;
 extern CRGBPalette16 myRedWhiteBluePalette;
 extern const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM;
 
+int brightness = BRIGHTNESS;
 
 void setup() {
   Serial.begin(57600);
   delay( 3000 ); // power-up safety delay
   FastLED.addLeds<LED_TYPE, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
-  FastLED.setbrightness(  brightness );
+  FastLED.setBrightness(  BRIGHTNESS );
 
   currentPalette = RainbowColors_p;
   currentBlending = LINEARBLEND;
 }
 
 char z;
-uint8_t density = 4;
-int brightness = 20;
-
-void Dim(int dimBy)
-{
-  if (brightness > dimBy - 1)
-  {
-    brightness -= dimBy;
-    LEDS.setbrightness(brightness);
-  }
-}
+uint8_t density = 5;
 
 void ClearSerialBuffer()
 {
@@ -76,10 +68,10 @@ void ProcessInput()
   switch (z)
   {
     case 'b':
-      FillLEDsFromPaletteColors(0, 71);
+      FillLEDsFromPaletteColors(60, 0, 71);
       break;
     case 'm':
-      FillLEDsFromPaletteColors(72, 143);
+      FillLEDsFromPaletteColors(60, 72, 143);
       break;
     default:
       break;
@@ -98,18 +90,25 @@ void loop()
 
   FastLED.show();
 
-  Dim(5);
+  Dim(0, 71);
+  Dim(72, 143);
 
   ClearSerialBuffer();
 
   FastLED.delay(1000 / UPDATES_PER_SECOND);
 }
 
-void FillLEDsFromPaletteColors(int firstLEDIndex, int lastLEDIndex)
+void FillLEDsFromPaletteColors(int fillBrightness, int firstLEDIndex, int lastLEDIndex)
 {
   for ( int i = firstLEDIndex; i <= lastLEDIndex; i += density) {
-    leds[i] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
-    colorIndex += 3;
+    leds[i] = ColorFromPalette( currentPalette, colorIndex, fillBrightness, currentBlending);
+  }
+}
+
+void Dim(int firstLEDIndex, int lastLEDIndex)
+{
+  for ( int i = firstLEDIndex; i <= lastLEDIndex; i += density) {
+    leds[i].fadeToBlackBy(5);
   }
 }
 
