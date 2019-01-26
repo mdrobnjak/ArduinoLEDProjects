@@ -1,7 +1,7 @@
 #include <FastLED.h>
 
 #define LED_PIN     5
-#define NUM_LEDS    144
+#define NUM_LEDS    64
 #define BRIGHTNESS   40
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
@@ -68,10 +68,10 @@ void ProcessInput()
   switch (z)
   {
     case 'b':
-      FillLEDsFromPaletteColors(60, 0, 71);
+      FillLEDsFromPaletteColors(60, 0, NUM_LEDS / 2 - 1);
       break;
     case 'm':
-      FillLEDsFromPaletteColors(60, 72, 143);
+      FillLEDsFromPaletteColors(60, NUM_LEDS / 2, NUM_LEDS - 1);
       break;
     default:
       break;
@@ -90,8 +90,8 @@ void loop()
 
   FastLED.show();
 
-  Dim(0, 71);
-  Dim(72, 143);
+  Dim(0, NUM_LEDS / 2 - 1);
+  Dim(NUM_LEDS / 2, NUM_LEDS - 1);
 
   ClearSerialBuffer();
 
