@@ -72,7 +72,7 @@ void ProcessInput()
       else
       {
         delayMs += 25;
-        Dim(10);
+        Dim(25);
       }
       break;
     case 'b':
@@ -122,13 +122,21 @@ void loop() {
     leds[iL] = CHSV(hue, 255, 255);
 
     leds[iLPrev].fadeToBlackBy(255);
+
+    for (int i = 2; i < 144; i += 2){
+      if (iL >= i){
+        leds[iL - i] = CHSV(hue,255,255);
+        leds[iLPrev - i].fadeToBlackBy(255);
+      }
+    }
+    
     iLPrev = iL;
 
     FastLED.show();
 
     FastLED.delay(delayMs);
   }
-
+  
   for (iL = (NUM_LEDS) - 1; iL >= 0; iL--) {
     CheckForInput();
     ProcessInput();
