@@ -36,6 +36,8 @@ extern const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM;
 
 int brightness = BRIGHTNESS;
 
+static uint8_t colorIndex = 0;
+
 void setup() {
   Serial.begin(57600);
   delay( 3000 ); // power-up safety delay
@@ -44,6 +46,17 @@ void setup() {
 
   currentPalette = RainbowColors_p;
   currentBlending = LINEARBLEND;
+
+  colorIndex = 106;
+  
+  for(int i = 0; i < NUM_LEDS; i++)
+  {
+    //colorIndex = random(2147000000);
+    colorIndex += 1;
+    FillLEDsFromPaletteColors(255, i, i);
+  }
+  
+  FastLED.show();
 }
 
 char z;
@@ -68,10 +81,8 @@ void ProcessInput()
   switch (z)
   {
     case 'b':
-      FillLEDsFromPaletteColors(60, 0, NUM_LEDS / 2 - 1);
       break;
     case 'm':
-      FillLEDsFromPaletteColors(60, NUM_LEDS / 2, NUM_LEDS - 1);
       break;
     default:
       break;
@@ -79,23 +90,9 @@ void ProcessInput()
   ClearSerialBuffer();
 }
 
-static uint8_t colorIndex = 0;
-
 void loop()
 {
-  Dim(0, NUM_LEDS - 1);
   
-  colorIndex = colorIndex + 1; /* motion speed */
-
-  CheckForInput();
-
-  ProcessInput();
-
-  FastLED.show();
-
-  //ClearSerialBuffer();
-
-  FastLED.delay(1000 / UPDATES_PER_SECOND);
 }
 
 void FillLEDsFromPaletteColors(int fillBrightness, int firstLEDIndex, int lastLEDIndex)

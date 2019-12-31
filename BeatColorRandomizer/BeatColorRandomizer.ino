@@ -36,6 +36,9 @@ extern const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM;
 
 int brightness = BRIGHTNESS;
 
+int colorIndexIncrement;
+static uint8_t colorIndex = 0;
+
 void setup() {
   Serial.begin(57600);
   delay( 3000 ); // power-up safety delay
@@ -44,6 +47,17 @@ void setup() {
 
   currentPalette = RainbowColors_p;
   currentBlending = LINEARBLEND;
+
+  colorIndex = 106;
+  
+  for(int i = 0; i < NUM_LEDS; i++)
+  {
+    //colorIndex = random(2147000000);
+    colorIndex += 1;
+    FillLEDsFromPaletteColors(255, i, i);
+  }
+  
+  FastLED.show();
 }
 
 char z;
@@ -67,11 +81,17 @@ void ProcessInput()
 {
   switch (z)
   {
-    case 'b':
-      FillLEDsFromPaletteColors(60, 0, NUM_LEDS / 2 - 1);
+    case 'b':      
+      Brighten( BRIGHTNESS );
       break;
-    case 'm':
-      FillLEDsFromPaletteColors(60, NUM_LEDS / 2, NUM_LEDS - 1);
+    case 'm':      
+      colorIndexIncrement = random(2) * 3;
+      colorIndex = random(2147000000);        
+      for(int i = 0; i < NUM_LEDS; i++)
+        {
+          colorIndex += colorIndexIncrement;
+          FillLEDsFromPaletteColors(255, i, i);
+        }
       break;
     default:
       break;
@@ -79,22 +99,16 @@ void ProcessInput()
   ClearSerialBuffer();
 }
 
-static uint8_t colorIndex = 0;
-
 void loop()
 {
-  Dim(0, NUM_LEDS - 1);
+  Dim(15);
   
-  colorIndex = colorIndex + 1; /* motion speed */
-
   CheckForInput();
 
   ProcessInput();
-
+  
   FastLED.show();
-
-  //ClearSerialBuffer();
-
+  
   FastLED.delay(1000 / UPDATES_PER_SECOND);
 }
 
@@ -105,11 +119,19 @@ void FillLEDsFromPaletteColors(int fillBrightness, int firstLEDIndex, int lastLE
   }
 }
 
-void Dim(int firstLEDIndex, int lastLEDIndex)
+void Dim(int dimBy)
 {
-  for ( int i = firstLEDIndex; i <= lastLEDIndex; i += density) {
-    leds[i].fadeToBlackBy(15);
+  if (brightness > dimBy)
+  {
+    brightness -= dimBy;
+    LEDS.setBrightness(brightness);
   }
+}
+
+void Brighten(int newBrightness)
+{
+  brightness = newBrightness;
+  LEDS.setBrightness(brightness);
 }
 
 
