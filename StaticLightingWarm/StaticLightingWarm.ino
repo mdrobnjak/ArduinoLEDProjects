@@ -2,7 +2,7 @@
 
 #define LED_PIN     5
 #define NUM_LEDS    150
-#define BRIGHTNESS   255
+#define BRIGHTNESS   130
 #define LED_TYPE    WS2811
 #define COLOR_ORDER GRB
 CRGB leds[NUM_LEDS];
@@ -36,7 +36,6 @@ extern const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM;
 
 int brightness = BRIGHTNESS;
 
-int colorIndexIncrement;
 static uint8_t colorIndex = 0;
 
 void setup() {
@@ -48,7 +47,7 @@ void setup() {
   currentPalette = RainbowColors_p;
   currentBlending = LINEARBLEND;
 
-  colorIndex = 106;
+  colorIndex = 220;
   
   for(int i = 0; i < NUM_LEDS; i++)
   {
@@ -81,18 +80,9 @@ void ProcessInput()
 {
   switch (z)
   {
-    case 'b':      
-      Brighten( BRIGHTNESS );
+    case 'b':
       break;
-    case 'm':      
-      colorIndexIncrement = random(2) * 3;
-      colorIndex = random(2147000000);        
-      for(int i = 0; i < NUM_LEDS; i++)
-        {
-          colorIndex += colorIndexIncrement;
-          FillLEDsFromPaletteColors(255, i, i);
-        }
-      Brighten( BRIGHTNESS ); //Make LEDs brighten with snare as well - MD 01/16/20
+    case 'm':
       break;
     default:
       break;
@@ -102,15 +92,7 @@ void ProcessInput()
 
 void loop()
 {
-  Dim(15);
   
-  CheckForInput();
-
-  ProcessInput();
-  
-  FastLED.show();
-  
-  FastLED.delay(1000 / UPDATES_PER_SECOND);
 }
 
 void FillLEDsFromPaletteColors(int fillBrightness, int firstLEDIndex, int lastLEDIndex)
@@ -120,19 +102,11 @@ void FillLEDsFromPaletteColors(int fillBrightness, int firstLEDIndex, int lastLE
   }
 }
 
-void Dim(int dimBy)
+void Dim(int firstLEDIndex, int lastLEDIndex)
 {
-  if (brightness > dimBy)
-  {
-    brightness -= dimBy;
-    LEDS.setBrightness(brightness);
+  for ( int i = firstLEDIndex; i <= lastLEDIndex; i += density) {
+    leds[i].fadeToBlackBy(15);
   }
-}
-
-void Brighten(int newBrightness)
-{
-  brightness = newBrightness;
-  LEDS.setBrightness(brightness);
 }
 
 
